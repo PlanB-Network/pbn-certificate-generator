@@ -1,0 +1,36 @@
+\documentclass{article}
+\usepackage[a4paper, landscape]{geometry} 
+\usepackage{pdfpages}
+\usepackage{tikz}
+\usepackage{fontspec} 
+
+\newfontfamily\myScriptFont{StyleScript}[
+    Path=../fonts/Style_Script/,
+    Extension=.ttf,
+    Scale=0.9
+]
+
+\newfontfamily\myMonoFont{JetBrainsMono}[
+    Path=../fonts/JetBrains_Mono/, 
+    Extension=.ttf,
+    Scale=0.85
+]
+\definecolor{myblack}{HTML}{000000}
+
+\pagestyle{empty}
+
+\begin{document}
+\includepdf[
+    pages=1,
+    pagecommand={%
+        \begin{tikzpicture}[remember picture, overlay]
+          \node[font=\myScriptFont\fontsize{52}{54}\selectfont, text=myblack] at (current page.center) {\raisebox{-75pt}{{fullname}}};
+            \node[font=\myMonoFont\fontsize{11}{13}\selectfont, text=myblack] at (current page.center) {\raisebox{-530pt}{a591a6d40bf420404a011733cfb7b190}};
+\node[font=\myMonoFont\fontsize{11}{13}\selectfont, text=myblack, anchor=west] 
+  at ([xshift=20mm, yshift=-150mm]current page.west) 
+  {d62c65bf0bcda32b57b277d9ad9f146e};
+        \end{tikzpicture}%
+    }
+]{./pbn_bitcoin_certificate_template.pdf}
+\end{document}
+
