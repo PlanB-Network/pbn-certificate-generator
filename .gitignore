@@ -2,4 +2,5 @@ inputs/
 outputs/
 env/
 pending/
-
+templates/*.aux
+templates/*.log
