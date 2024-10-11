@@ -2,7 +2,8 @@ import hashlib
 import os
 import re
 import subprocess
-from typing import Optional
+import shutil
+from typing import Optional, Dict
 
 
 def is_ots_done(ots_file_path: str) -> bool:
@@ -57,7 +58,6 @@ def compute_sha256(file_path):
             hash_sha256.update(chunk)
     return hash_sha256.hexdigest()
 
-
 def extract_property(txt_file: str, property_name: str) -> Optional[str]:
     """
     Extract a property value from a text file given the property name.
@@ -77,20 +77,26 @@ def extract_property(txt_file: str, property_name: str) -> Optional[str]:
     
     return match.group(1).strip() if match else None
 
+def modify_and_save_tex(template_path: str, new_tex_path: str, certificate_data: Dict[str, str]) -> None:
+    """
+    Modifies a LaTeX template with certificate data and saves the result.
 
-def modify_and_save_tex(template_path, new_tex_path, fullname, completion_date, hash_value_1, hash_value_2, txid_1, txid_2):
-    """Modifies the LaTeX template and saves it to a new .tex file."""
+    Args:
+        template_path: Path to the LaTeX template file.
+        new_tex_path: Path to save the modified LaTeX file.
+        certificate_data: Dictionary of placeholders and their replacements.
+
+    Replaces {key} placeholders in the template with corresponding values from certificate_data.
+    """
     with open(template_path, "r") as file:
         content = file.read()
-    content = content.replace("{fullname}", fullname)
-    content = content.replace("{completion_date}", completion_date)
-    content = content.replace("{certificate-part1}", hash_value_1)
-    content = content.replace("{certificate-part2}", hash_value_2)
-    content = content.replace("{timestamp-part1}", txid_1)
-    content = content.replace("{timestamp-part2}", txid_2)
+    
+    for key, value in certificate_data.items():
+        placeholder = f"{{{key}}}"
+        content = content.replace(placeholder, str(value))
+    
     with open(new_tex_path, "w") as file:
         file.write(content)
-
 
 def format_hash(hash_value):
     """Formats the hash value to have a space after every four characters."""
@@ -106,38 +112,72 @@ def split_and_format_hash(hash):
     
     return format_hash(first_half), format_hash(second_half)
 
+def compile_tex_to_pdf(tex_filepath: str) -> bool:
+    """
+    Compiles a .tex file to PDF using lualatex and cleans up auxiliary files.
 
+    Args:
+        tex_filepath: Path to the .tex file to be compiled.
 
-def process_files(template_path, directory):
-    """Processes each matching .txt file in the directory."""
-    for filename in os.listdir(directory):
-        if filename.startswith("PlanB-BizSchool-diploma") and filename.endswith(
-            "-signed.txt"
-        ):
-            print(filename)
-            pathfile = os.path.join(directory, filename)
-            ots_file_path = f"{pathfile}.ots"
-            fullname = extract_fullname(pathfile)
-            hash_1, hash_2 = split_and_format_hash(compute_sha256(pathfile))
-            txid_1, txid_2 = split_and_format_hash(get_ots_blockhash(ots_file_path))
+    Returns:
+        bool: True if compilation succeeded, False otherwise.
+    """
+    folder_path = os.path.dirname(tex_filepath)
+    file_name = os.path.splitext(os.path.basename(tex_filepath))[0]
 
-            if fullname:
-                new_tex_name = filename.replace(".txt", ".tex")
-                modify_and_save_tex(
-                    template_path,
-                    os.path.join(directory, new_tex_name),
-                    fullname,
-                    hash_1,
-                    hash_2,
-                    txid_1,
-                    txid_2,
-                )
-                print(f"Generated .tex file for: {filename}")
+    try:
+        result = subprocess.run(
+            ['lualatex', '-interaction=nonstopmode', tex_filepath],
+            cwd=folder_path,
+            capture_output=True,
+            text=True
+        )
 
+        pdf_path = os.path.join(folder_path, f"{file_name}.pdf")
+        if os.path.exists(pdf_path):
+            for ext in ['.log', '.aux', '.tex']:
+                aux_file = os.path.join(folder_path, f"{file_name}{ext}")
+                if os.path.exists(aux_file):
+                    os.remove(aux_file)
+            return True
 
-template_path = "./planb-bizschool-template.tex"
-directory_path = "./"  # Adjust to your directory as needed
-process_files(template_path, directory_path)
+        print(f"PDF not produced. lualatex output:\n{result.stdout}\n{result.stderr}")
+        return False
+
+    except subprocess.CalledProcessError as e:
+        print(f"Error running lualatex: {e}")
+        return False
+
+def move_files_to_final(pathfile: str, signed_txt_path: str, pdf_path: str) -> bool:
+    """
+    Moves specified files to a '../final' folder.
+
+    Args:
+        pathfile: Path to the .ots file.
+        signed_txt_path: Path to the signed text file.
+        pdf_path: Path to the PDF file.
+
+    Returns:
+        bool: True if all files were moved successfully, False otherwise.
+    """
+    current_dir = os.path.dirname(pathfile)
+    final_dir = os.path.join(os.path.dirname(current_dir), 'final')
+
+    # Ensure the final directory exists
+    os.makedirs(final_dir, exist_ok=True)
+
+    files_to_move = [pathfile, signed_txt_path, pdf_path]
+    
+    try:
+        for file_path in files_to_move:
+            if os.path.exists(file_path):
+                shutil.move(file_path, os.path.join(final_dir, os.path.basename(file_path)))
+            else:
+                print(f"Warning: File not found: {file_path}")
+        return True
+    except Exception as e:
+        print(f"Error moving files: {e}")
+        return False
 
 if __name__ == "__main__":
     pending_path = "../pending"
@@ -145,15 +185,29 @@ if __name__ == "__main__":
     for filename in filenames:
         if filename.startswith("course_") and filename.endswith(".ots"):
             pathfile = os.path.join(pending_path, filename)
+            print(pathfile)
             if is_ots_done(pathfile):
-                txid_1, txid_2 = split_and_format_hash(get_ots_blockhash(ots_file_path))
                 signed_txt_path = pathfile.removesuffix(".ots")
-                fullname = extract_property(signed_txt_path, "fullname")
-                #TODO: write for the other properties needed in the pdf file
-                hash_1, hash_2 = split_and_format_hash(compute_sha256(pathfile))
 
+                txid_1, txid_2 = split_and_format_hash(get_ots_blockhash(pathfile))
+                hash_1, hash_2 = split_and_format_hash(compute_sha256(signed_txt_path))
 
+                certificate_data = {
+                    "fullname": extract_property(signed_txt_path, "Full name"),
+                    "date": extract_property(signed_txt_path, "Date of completion"),
+                    "course_id": extract_property(signed_txt_path, "Course ID"),
+                    "course_name": extract_property(signed_txt_path, "Course name"),
+                    "duration": extract_property(signed_txt_path, "Duration"),
+                    "hash_1": hash_1,
+                    "hash_2": hash_2,
+                    "txid_1": txid_1,
+                    "txid_2": txid_2,
+                }
 
+                tex_filepath = signed_txt_path.replace('.txt', '.tex')
+                tex_template_path = '../templates/pbn_course_certificate.tex'
+                pdf_filepath = signed_txt_path.replace('.txt', '.pdf')
 
-            
-
+                modify_and_save_tex(tex_template_path, tex_filepath, certificate_data)
+                compile_tex_to_pdf(tex_filepath)
+                move_files_to_final(pathfile, signed_txt_path, pdf_filepath)
