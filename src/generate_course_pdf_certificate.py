@@ -3,6 +3,7 @@ import os
 import re
 import subprocess
 import shutil
+from datetime import datetime
 from typing import Optional, Dict
 
 
@@ -179,6 +180,43 @@ def move_files_to_final(pathfile: str, signed_txt_path: str, pdf_path: str) -> b
         print(f"Error moving files: {e}")
         return False
 
+def format_date(date_string: str) -> str:
+    """
+    Convert date from YYYY-MM-DD format to DDth Month, YYYY format.
+    
+    Args:
+        date_string: A string representing a date in YYYY-MM-DD format.
+    
+    Returns:
+        A string representing the date in DDth Month, YYYY format.
+    """
+    date_obj = datetime.strptime(date_string, "%Y-%m-%d")
+    
+    day = date_obj.day
+    suffix = "th" if 4 <= day <= 20 or 24 <= day <= 30 else ["st", "nd", "rd"][day % 10 - 1]
+    
+    return date_obj.strftime(f"%d{suffix} %B, %Y")
+
+def split_and_format_coursename(coursename: str) -> tuple[str, str]:
+    """
+    Split a coursename into two halves based on word count.
+    
+    If the word count is odd, the first half will be smaller.
+    
+    Args:
+        coursename: A string representing the full course name.
+    
+    Returns:
+        A tuple containing two strings: (first_half, second_half).
+    """
+    words = coursename.split()
+    mid = len(words) // 2
+    
+    first_half = " ".join(words[:mid])
+    second_half = " ".join(words[mid:])
+    
+    return first_half, second_half
+
 if __name__ == "__main__":
     pending_path = "../pending"
     filenames = sorted(os.listdir(pending_path))
@@ -192,11 +230,14 @@ if __name__ == "__main__":
                 txid_1, txid_2 = split_and_format_hash(get_ots_blockhash(pathfile))
                 hash_1, hash_2 = split_and_format_hash(compute_sha256(signed_txt_path))
 
+                course_name_1, course_name_2 = split_and_format_coursename(extract_property(signed_txt_path, "Course name"))
+
                 certificate_data = {
                     "fullname": extract_property(signed_txt_path, "Full name"),
-                    "date": extract_property(signed_txt_path, "Date of completion"),
+                    "date": format_date(extract_property(signed_txt_path, "Date of completion")),
                     "course_id": extract_property(signed_txt_path, "Course ID"),
-                    "course_name": extract_property(signed_txt_path, "Course name"),
+                    "course_name_1": course_name_1,
+                    "course_name_2": course_name_2,
                     "duration": extract_property(signed_txt_path, "Duration"),
                     "hash_1": hash_1,
                     "hash_2": hash_2,
