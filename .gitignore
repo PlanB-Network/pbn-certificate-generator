@@ -4,3 +4,4 @@ env/
 pending/
 templates/*.aux
 templates/*.log
+final
