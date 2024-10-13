@@ -51,6 +51,7 @@ def get_ots_blockhash(ots_file_path: str) -> str:
     except AttributeError:
         return "Block height not found in OTS verification output"
 
+
 def compute_sha256(file_path):
     """Compute the SHA256 hash of a file."""
     hash_sha256 = hashlib.sha256()
@@ -115,36 +116,34 @@ def split_and_format_hash(hash):
 
 def compile_tex_to_pdf(tex_filepath: str) -> bool:
     """
-    Compiles a .tex file to PDF using lualatex and cleans up auxiliary files.
-
+    Compiles a .tex file to PDF using lualatex twice and cleans up auxiliary files.
     Args:
         tex_filepath: Path to the .tex file to be compiled.
-
     Returns:
         bool: True if compilation succeeded, False otherwise.
     """
     folder_path = os.path.dirname(tex_filepath)
     file_name = os.path.splitext(os.path.basename(tex_filepath))[0]
-
+    
     try:
-        result = subprocess.run(
-            ['lualatex', '-interaction=nonstopmode', tex_filepath],
-            cwd=folder_path,
-            capture_output=True,
-            text=True
-        )
-
+        for _ in range(2):  
+            result = subprocess.run(
+                ['lualatex', '-interaction=nonstopmode', tex_filepath],
+                cwd=folder_path,
+                capture_output=True,
+                text=True,
+                check=True 
+            )
         pdf_path = os.path.join(folder_path, f"{file_name}.pdf")
         if os.path.exists(pdf_path):
-            for ext in ['.log', '.aux', '.tex']:
+            for ext in ['.log', '.aux', '.out', '.tex']:
                 aux_file = os.path.join(folder_path, f"{file_name}{ext}")
                 if os.path.exists(aux_file):
                     os.remove(aux_file)
             return True
-
-        print(f"PDF not produced. lualatex output:\n{result.stdout}\n{result.stderr}")
+        print(f"PDF not produced after two passes.")
         return False
-
+    
     except subprocess.CalledProcessError as e:
         print(f"Error running lualatex: {e}")
         return False
@@ -164,7 +163,6 @@ def move_files_to_final(pathfile: str, signed_txt_path: str, pdf_path: str) -> b
     current_dir = os.path.dirname(pathfile)
     final_dir = os.path.join(os.path.dirname(current_dir), 'final')
 
-    # Ensure the final directory exists
     os.makedirs(final_dir, exist_ok=True)
 
     files_to_move = [pathfile, signed_txt_path, pdf_path]
@@ -182,20 +180,21 @@ def move_files_to_final(pathfile: str, signed_txt_path: str, pdf_path: str) -> b
 
 def format_date(date_string: str) -> str:
     """
-    Convert date from YYYY-MM-DD format to DDth Month, YYYY format.
+    Convert date from YYYY-MM-DD format to Dth Month, YYYY format without leading zero.
     
     Args:
         date_string: A string representing a date in YYYY-MM-DD format.
     
     Returns:
-        A string representing the date in DDth Month, YYYY format.
+        A string representing the date in Dth Month, YYYY format.
     """
     date_obj = datetime.strptime(date_string, "%Y-%m-%d")
     
     day = date_obj.day
+    
     suffix = "th" if 4 <= day <= 20 or 24 <= day <= 30 else ["st", "nd", "rd"][day % 10 - 1]
     
-    return date_obj.strftime(f"%d{suffix} %B, %Y")
+    return f"{day}{suffix} {date_obj.strftime('%B, %Y')}"
 
 def split_and_format_coursename(coursename: str) -> tuple[str, str]:
     """
@@ -244,11 +243,15 @@ if __name__ == "__main__":
                     "txid_1": txid_1,
                     "txid_2": txid_2,
                 }
+                print(certificate_data)
 
                 tex_filepath = signed_txt_path.replace('.txt', '.tex')
                 tex_template_path = '../templates/pbn_course_certificate.tex'
                 pdf_filepath = signed_txt_path.replace('.txt', '.pdf')
 
                 modify_and_save_tex(tex_template_path, tex_filepath, certificate_data)
+                print(f"{filename} tex file replaced")
                 compile_tex_to_pdf(tex_filepath)
+                print(f"{filename} pdf file produced")
                 move_files_to_final(pathfile, signed_txt_path, pdf_filepath)
+                print(f"{filename} files moved")
