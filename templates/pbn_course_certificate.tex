@@ -1,0 +1,91 @@
+\documentclass[landscape]{article}
+
+\usepackage{tikz}
+\usepackage{fontspec}
+\usepackage{pdfpages}
+\usepackage{geometry}
+
+% Adjust the page dimensions as necessary for landscape mode
+\geometry{a4paper, landscape}
+
+\newfontfamily\MyScriptFont[Path=../fonts/Style_Script/, Extension=.ttf, Scale=0.9]{StyleScript}
+\newfontfamily\MyMonoFont[Path=../fonts/JetBrains_Mono/, Extension=.ttf, Scale=0.85]{JetBrainsMono}
+\newfontfamily\MyRubikFont[Path=../fonts/Rubik/, Extension=.ttf, Scale=0.85]{Rubik-Regular}
+
+\definecolor{mywhite}{HTML}{FFFFFF}
+\definecolor{myorange}{HTML}{FF5C00}
+\pagestyle{empty}
+
+% Define placeholders for dynamic content
+\newcommand{\StudentName}{{fullname}}
+\newcommand{\CourseNameOne}{{course_name_1}}
+\newcommand{\CourseNameTwo}{{course_name_2}}
+\newcommand{\Date}{{date}}
+\newcommand{\CourseID}{{course_id}}
+\newcommand{\Duration}{{duration}}
+\newcommand{\HashOne}{{hash_1}}
+\newcommand{\HashTwo}{{hash_2}}
+\newcommand{\TxidOne}{{txid_1}}
+\newcommand{\TxidTwo}{{txid_2}}
+
+% Define a max font size
+\newcommand{\MaxFontSize}{82}
+% Define a min font size (for long names)
+\newcommand{\MinFontSize}{40}
+
+% Adjust this based on the width of the space you allow for the course name
+\newlength{\MaxTextWidth}
+\setlength{\MaxTextWidth}{\textwidth}
+
+% New AdjustableText command using scalebox
+\newcommand{\AdjustableText}[1]{%
+  \begingroup
+  \fontsize{\MaxFontSize}{\MaxFontSize}\selectfont
+  \settowidth{\dimen0}{#1}%
+  \ifdim\dimen0>\MaxTextWidth
+    \resizebox{\MaxTextWidth}{!}{#1}%
+  \else
+    #1%
+  \fi
+  \endgroup
+}
+
+\begin{document}
+
+% Load the PDF template
+\includepdf[pages=-, pagecommand={
+    \begin{tikzpicture}[remember picture, overlay]
+        % fullname with resizing for long names
+        \node[font=\MyScriptFont, text=myorange, align=center] 
+            at ([xshift=0pt, yshift=-55pt]current page.center) {\AdjustableText{\StudentName}};        
+        % course name I with automatic font adjustment
+        \node[font=\MyRubikFont\fontsize{60}{62}\selectfont, text=mywhite, align=center] 
+            at ([xshift=0pt, yshift=150pt]current page.center) {\CourseNameOne};
+        % course name II with automatic font adjustment
+        \node[font=\MyRubikFont\fontsize{60}{62}\selectfont, text=mywhite, align=center] 
+            at ([xshift=0pt, yshift=90pt]current page.center) {\CourseNameTwo};
+        % date
+        \node[font=\MyRubikFont\fontsize{16}{18}\selectfont, text=mywhite, anchor=east] 
+            at ([xshift=402pt, yshift=230pt]current page.center) {\Date};
+        % CourseID
+        \node[font=\MyRubikFont\fontsize{19}{21}\selectfont, text=mywhite, anchor=west] 
+            at ([xshift=-402pt, yshift=-190pt]current page.center) {\CourseID};
+        % duration
+        \node[font=\MyRubikFont\fontsize{19}{21}\selectfont, text=mywhite, anchor=east] 
+            at ([xshift=402pt, yshift=-190pt]current page.center) {\Duration};
+        % hash 1
+        \node[font=\MyMonoFont\fontsize{12}{14}\selectfont, text=mywhite, anchor=east] 
+            at ([xshift=402pt, yshift=-250pt]current page.center) {\HashOne};
+        % hash 2
+        \node[font=\MyMonoFont\fontsize{12}{14}\selectfont, text=mywhite, anchor=east] 
+            at ([xshift=402pt, yshift=-265pt]current page.center) {\HashTwo};
+        % txid 1
+        \node[font=\MyMonoFont\fontsize{12}{14}\selectfont, text=mywhite, anchor=west] 
+            at ([xshift=-402pt, yshift=-250pt]current page.center) {\TxidOne};
+        % txid 2
+        \node[font=\MyMonoFont\fontsize{12}{14}\selectfont, text=mywhite, anchor=west] 
+            at ([xshift=-402pt, yshift=-265pt]current page.center) {\TxidTwo};
+    \end{tikzpicture}
+}]{../templates/pbn_course_certificate_template.pdf}
+
+\end{document}
