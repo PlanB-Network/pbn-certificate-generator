@@ -3,13 +3,10 @@ Certificate of Completion of the Bitcoin Certificate by Plan ₿ Network
 This certificate is conferred upon successful completion of the ₿-CERT assessment, recognizing the candidate's demonstrated proficiency in Bitcoin knowledge and skills. The following details authenticate this achievement:
 
 Student username: {username}
-Display name: {display_name}
+Display name: {fullname}
 
-Course name: {course_name} 
-Course ID: {course_id}
-Level: {level}
-Goal: {goal} 
-Duration: {duration} hours
-Last course hash commit: {last_commit_hash}
+Exam ID: {exam_id}
+Location: {location}
 Date of completion: {date}
+Total Score: {total_score}/100
 Last block header: {last_block_header}
