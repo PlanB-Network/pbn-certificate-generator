@@ -6,4 +6,4 @@ This allows anyone to audit our process and to verify the authenticity of any is
 
 ## non-ordered notes
 
--
+- requires the ots command
