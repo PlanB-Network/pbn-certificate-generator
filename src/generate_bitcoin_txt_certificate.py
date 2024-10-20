@@ -1,8 +1,6 @@
 import os
 import yaml
-import requests
 import subprocess
-from datetime import date
 
 def load_yaml_file(file_path):
     """Load and return the contents of a YAML file."""
@@ -113,9 +111,14 @@ def process_result(edition_data, result_folder, subfolder):
     total_score = get_total_score(result_data)
     if total_score >= 80:
         print(f"user has passed with {total_score}")
-        print(f"generation in progress..")
         result_folder_path = os.path.join(result_folder, subfolder)
-        generate_certificate(edition_data, result_data, result_folder_path)
+        
+        ots_file = os.path.join(result_folder_path, "bitcoin_certificate-signed.txt.ots")
+        if os.path.exists(ots_file):
+            print(f"Certificate already generated for {result_data.get('username', 'Unknown')}")
+        else:
+            print(f"generation in progress..")
+            generate_certificate(edition_data, result_data, result_folder_path)
     else:
         print(f"user did not pass with {total_score}")
     print()
