@@ -1,36 +1,87 @@
-\documentclass{article}
-\usepackage[a4paper, landscape]{geometry} 
-\usepackage{pdfpages}
+\documentclass[landscape]{article}
+
 \usepackage{tikz}
-\usepackage{fontspec} 
+\usepackage{fontspec}
+\usepackage{pdfpages}
+\usepackage{geometry}
 
-\newfontfamily\myScriptFont{StyleScript}[
-    Path=../fonts/Style_Script/,
-    Extension=.ttf,
-    Scale=0.9
-]
+% Adjust the page dimensions as necessary for landscape mode
+\geometry{a4paper, landscape}
 
-\newfontfamily\myMonoFont{JetBrainsMono}[
-    Path=../fonts/JetBrains_Mono/, 
-    Extension=.ttf,
-    Scale=0.85
-]
+\newfontfamily\MyScriptFont[Path=../fonts/Style_Script/, Extension=.ttf, Scale=0.9]{StyleScript}
+\newfontfamily\MyMonoFont[Path=../fonts/JetBrains_Mono/, Extension=.ttf, Scale=0.85]{JetBrainsMono}
+\newfontfamily\MyRubikFont[Path=../fonts/Rubik/, Extension=.ttf, Scale=0.85]{Rubik-Regular}
+
 \definecolor{myblack}{HTML}{000000}
-
+\definecolor{myorange}{HTML}{FF5C00}
 \pagestyle{empty}
 
-\begin{document}
-\includepdf[
-    pages=1,
-    pagecommand={%
-        \begin{tikzpicture}[remember picture, overlay]
-          \node[font=\myScriptFont\fontsize{52}{54}\selectfont, text=myblack] at (current page.center) {\raisebox{-75pt}{{fullname}}};
-            \node[font=\myMonoFont\fontsize{11}{13}\selectfont, text=myblack] at (current page.center) {\raisebox{-530pt}{a591a6d40bf420404a011733cfb7b190}};
-\node[font=\myMonoFont\fontsize{11}{13}\selectfont, text=myblack, anchor=west] 
-  at ([xshift=20mm, yshift=-150mm]current page.west) 
-  {d62c65bf0bcda32b57b277d9ad9f146e};
-        \end{tikzpicture}%
-    }
-]{./pbn_bitcoin_certificate_template.pdf}
-\end{document}
+% Define placeholders for dynamic content
+\newcommand{\StudentName}{{fullname}}
+\newcommand{\Date}{{date}}
+\newcommand{\HashOne}{{hash1}}
+\newcommand{\HashTwo}{{hash2}}
+\newcommand{\TxidOne}{{timestamp1}}
+\newcommand{\TxidTwo}{{timestamp2}}
 
+% Define a max font size
+\newcommand{\MaxFontSize}{82}
+% Define a min font size (for long names)
+\newcommand{\MinFontSize}{40}
+
+% Adjust this based on the width of the space you allow for the course name
+\newlength{\MaxTextWidth}
+\setlength{\MaxTextWidth}{\textwidth}
+
+% New AdjustableText command using scalebox
+\newcommand{\AdjustableText}[1]{%
+  \begingroup
+  \fontsize{\MaxFontSize}{\MaxFontSize}\selectfont
+  \settowidth{\dimen0}{#1}%
+  \ifdim\dimen0>\MaxTextWidth
+    \resizebox{\MaxTextWidth}{!}{#1}%
+  \else
+    #1%
+  \fi
+  \endgroup
+}
+
+\def\bitcoinA{%
+  \leavevmode
+  \vtop{\offinterlineskip %\bfseries
+    \setbox0=\hbox{B}%
+    \setbox2=\hbox to\wd0{\hfil\hskip-.03em
+    \vrule height .3ex width .15ex\hskip .08em
+    \vrule height .3ex width .15ex\hfil}
+    \vbox{\copy2\box0}\box2}}
+
+\begin{document}
+
+% Load the PDF template
+\includepdf[pages=-, pagecommand={
+    \begin{tikzpicture}[remember picture, overlay]
+        % fullname with resizing for long names
+        \node[font=\MyScriptFont, text=myorange, align=center] 
+            at ([xshift=0pt, yshift=-55pt]current page.center) {\AdjustableText{\StudentName}};        
+        % date
+        \node[font=\MyRubikFont\fontsize{16}{18}\selectfont, text=myblack, anchor=west] 
+            at ([xshift=-402pt, yshift=-165pt]current page.center) {\bold{\Date}};
+        % Plan B Network
+        \node[font=\MyRubikFont\fontsize{16}{18}\selectfont, text=myblack, anchor=east] 
+            at ([xshift=402pt, yshift=-165pt]current page.center) {\bold{Plan\,\bitcoinA\,Network}};
+        % hash 1
+        \node[font=\MyMonoFont\fontsize{12}{14}\selectfont, text=myblack, anchor=east] 
+            at ([xshift=402pt, yshift=-230pt]current page.center) {\HashOne};
+        % hash 2
+        \node[font=\MyMonoFont\fontsize{12}{14}\selectfont, text=myblack, anchor=east] 
+            at ([xshift=402pt, yshift=-245pt]current page.center) {\HashTwo};
+        % txid 1
+        \node[font=\MyMonoFont\fontsize{12}{14}\selectfont, text=myblack, anchor=west] 
+            at ([xshift=-402pt, yshift=-230pt]current page.center) {\TxidOne};
+        % txid 2
+        \node[font=\MyMonoFont\fontsize{12}{14}\selectfont, text=myblack, anchor=west] 
+            at ([xshift=-402pt, yshift=-245pt]current page.center) {\TxidTwo};
+    \end{tikzpicture}
+}]{../templates/pbn_bitcoin_certificate_template.pdf}
+
+\end{document}
