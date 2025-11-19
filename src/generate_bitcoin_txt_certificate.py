@@ -43,7 +43,7 @@ def timestamp_file(file_path):
 def get_total_score(result_data):
     """
     Calculate the total score by summing all scores in the categories.
-    
+
     :param result_data: Dictionary containing the exam results
     :return: Total score as an integer
     """
@@ -57,14 +57,14 @@ def get_total_score(result_data):
 def generate_certificate(edition_data, result_data, result_folder_path):
     """Generate a certificate using the edition and result data."""
     print("Generating certificate...")
-    
+
     username = result_data.get('username', 'Unknown')
     fullname = result_data.get('display_name', 'Unknown')
     total_score = get_total_score(result_data)
     exam_id = edition_data.get('exam_id', 'Unknown')
     location = edition_data.get('location', 'Unknown')
     date = edition_data.get('date')
-    
+
     last_block_header = get_latest_block_header()
 
     template_folder = "../templates"
@@ -109,18 +109,15 @@ def process_result(edition_data, result_folder, subfolder):
     print(f"Processing result for: {result_data.get('username', 'Unknown')}")
 
     total_score = get_total_score(result_data)
-    if total_score >= 80:
-        print(f"user has passed with {total_score}")
-        result_folder_path = os.path.join(result_folder, subfolder)
-        
-        ots_file = os.path.join(result_folder_path, "bitcoin_certificate-signed.txt.ots")
-        if os.path.exists(ots_file):
-            print(f"Certificate already generated for {result_data.get('username', 'Unknown')}")
-        else:
-            print(f"generation in progress..")
-            generate_certificate(edition_data, result_data, result_folder_path)
+    print(f"Generating certificate for user with score: {total_score}")
+    result_folder_path = os.path.join(result_folder, subfolder)
+
+    ots_file = os.path.join(result_folder_path, "bitcoin_certificate-signed.txt.ots")
+    if os.path.exists(ots_file):
+        print(f"Certificate already generated for {result_data.get('username', 'Unknown')}")
     else:
-        print(f"user did not pass with {total_score}")
+        print(f"Generation in progress..")
+        generate_certificate(edition_data, result_data, result_folder_path)
     print()
 
 def process_edition(edition_path):
@@ -142,6 +139,52 @@ def process_edition(edition_path):
     for subfolder in sorted(subfolders):
         process_result(edition_data, result_folder, subfolder)
 
+def select_editions_interactively(bcert_path):
+    """Display editions and let user select which ones to process."""
+    # Get all edition folders
+    all_editions = []
+    for edition_folder in sorted(os.listdir(bcert_path)):
+        edition_path = os.path.join(bcert_path, edition_folder)
+        if os.path.isdir(edition_path):
+            all_editions.append((edition_folder, edition_path))
+
+    if not all_editions:
+        print("No editions found!")
+        return []
+
+    # Display available editions
+    print("\n=== Available Editions ===")
+    for idx, (edition_name, _) in enumerate(all_editions, 1):
+        print(f"{idx}. {edition_name}")
+    print(f"{len(all_editions) + 1}. Process ALL editions")
+    print("=" * 30)
+
+    # Get user selection
+    while True:
+        try:
+            choice = input("\nEnter edition number to process (or 'q' to quit): ").strip()
+
+            if choice.lower() == 'q':
+                print("Exiting...")
+                return []
+
+            choice_num = int(choice)
+
+            # Check if user wants all editions
+            if choice_num == len(all_editions) + 1:
+                return all_editions
+
+            # Validate selection
+            if 1 <= choice_num <= len(all_editions):
+                selected = all_editions[choice_num - 1]
+                print(f"\nSelected: {selected[0]}")
+                return [selected]
+            else:
+                print(f"Invalid choice. Please enter a number between 1 and {len(all_editions) + 1}")
+
+        except ValueError:
+            print("Invalid input. Please enter a number or 'q' to quit.")
+
 def process_all_editions(bcert_path):
     """Process all edition folders in the given path."""
     for edition_folder in sorted(os.listdir(bcert_path)):
@@ -152,4 +195,21 @@ def process_all_editions(bcert_path):
 
 if __name__ == "__main__":
     bcert_path = "../../planB-premium-content/bcert/editions/"
-    process_all_editions(bcert_path)
+
+    # Interactive selection
+    selected_editions = select_editions_interactively(bcert_path)
+
+    if selected_editions:
+        print("\n" + "=" * 50)
+        print("Starting certificate generation...")
+        print("=" * 50)
+
+        for edition_name, edition_path in selected_editions:
+            print(f"\nProcessing edition: {edition_name}")
+            process_edition(edition_path)
+
+        print("\n" + "=" * 50)
+        print("Certificate generation completed!")
+        print("=" * 50)
+    else:
+        print("No editions selected.")

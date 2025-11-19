@@ -18,11 +18,11 @@
 
 % Define placeholders for dynamic content
 \newcommand{\StudentName}{{fullname}}
-\newcommand{\Date}{{date}}
 \newcommand{\HashOne}{{hash1}}
 \newcommand{\HashTwo}{{hash2}}
 \newcommand{\TxidOne}{{txid1}}
 \newcommand{\TxidTwo}{{txid2}}
+\newcommand{\Score}{{score}}
 
 % Define a max font size
 \newcommand{\MaxFontSize}{82}
@@ -62,25 +62,21 @@
     \begin{tikzpicture}[remember picture, overlay]
         % fullname with resizing for long names
         \node[font=\MyScriptFont, text=myorange, align=center] 
-            at ([xshift=0pt, yshift=-55pt]current page.center) {\AdjustableText{\StudentName}};        
-        % date
-        \node[font=\MyRubikFont\fontsize{16}{18}\selectfont, text=myblack, anchor=west] 
-            at ([xshift=-402pt, yshift=-165pt]current page.center) {\bold{\Date}};
-        % Plan B Network
-        \node[font=\MyRubikFont\fontsize{16}{18}\selectfont, text=myblack, anchor=east] 
-            at ([xshift=402pt, yshift=-165pt]current page.center) {\bold{Plan\,\bitcoinA\,Network}};
+            at ([xshift=0pt, yshift=-40pt]current page.center) {\AdjustableText{\StudentName}};
+        \node[font=\MyRubikFont\fontsize{24}{26}\selectfont, text=myblack, align=center] 
+            at ([xshift=25pt, yshift=-110pt]current page.center) {\textbf{\Score}};        
         % hash 1
         \node[font=\MyMonoFont\fontsize{12}{14}\selectfont, text=myblack, anchor=east] 
-            at ([xshift=402pt, yshift=-230pt]current page.center) {\HashOne};
+            at ([xshift=385pt, yshift=-230pt]current page.center) {\HashOne};
         % hash 2
         \node[font=\MyMonoFont\fontsize{12}{14}\selectfont, text=myblack, anchor=east] 
-            at ([xshift=402pt, yshift=-245pt]current page.center) {\HashTwo};
+            at ([xshift=385pt, yshift=-245pt]current page.center) {\HashTwo};
         % txid 1
         \node[font=\MyMonoFont\fontsize{12}{14}\selectfont, text=myblack, anchor=west] 
-            at ([xshift=-402pt, yshift=-230pt]current page.center) {\TxidOne};
+            at ([xshift=-385pt, yshift=-230pt]current page.center) {\TxidOne};
         % txid 2
         \node[font=\MyMonoFont\fontsize{12}{14}\selectfont, text=myblack, anchor=west] 
-            at ([xshift=-402pt, yshift=-245pt]current page.center) {\TxidTwo};
+            at ([xshift=-385pt, yshift=-245pt]current page.center) {\TxidTwo};
     \end{tikzpicture}
 }]{../templates/pbn_bitcoin_certificate_template.pdf}
 
