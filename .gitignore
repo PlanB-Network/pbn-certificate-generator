@@ -6,3 +6,5 @@ templates/*.aux
 templates/*.log
 final
 .env
+.serena
+CLAUDE.md
