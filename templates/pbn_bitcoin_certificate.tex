@@ -23,6 +23,7 @@
 \newcommand{\TxidOne}{{txid1}}
 \newcommand{\TxidTwo}{{txid2}}
 \newcommand{\Score}{{score}}
+\newcommand{\DateFormatted}{{date_formatted}}
 
 % Define a max font size
 \newcommand{\MaxFontSize}{82}
@@ -64,7 +65,10 @@
         \node[font=\MyScriptFont, text=myorange, align=center] 
             at ([xshift=0pt, yshift=-40pt]current page.center) {\AdjustableText{\StudentName}};
         \node[font=\MyRubikFont\fontsize{24}{26}\selectfont, text=myblack, align=center] 
-            at ([xshift=25pt, yshift=-110pt]current page.center) {\textbf{\Score}};        
+            at ([xshift=25pt, yshift=-110pt]current page.center) {\textbf{\Score}};
+        % date
+        \node[font=\MyRubikFont\fontsize{12}{14}\selectfont, text=myblack, align=center] 
+            at ([xshift=0pt, yshift=-275]current page.center) {\DateFormatted};        
         % hash 1
         \node[font=\MyMonoFont\fontsize{12}{14}\selectfont, text=myblack, anchor=east] 
             at ([xshift=385pt, yshift=-230pt]current page.center) {\HashOne};

@@ -244,9 +244,14 @@ def process_edition(edition_folder, edition_path):
                     txid_1, txid_2 = split_and_format_hash(get_ots_blockhash(ots_file))
                     hash_1, hash_2 = split_and_format_hash(compute_sha256(signed_txt_path))
 
+                    # Extract and format date
+                    date_iso = extract_property(signed_txt_path, "Date of completion")
+                    date_formatted = format_date(date_iso) if date_iso else ""
+
                     certificate_data = {
                         "fullname": extract_property(signed_txt_path, "Display name"),
                         "score": extract_property(signed_txt_path, "Total Score"),
+                        "date_formatted": date_formatted,
                         "hash1": hash_1,
                         "hash2": hash_2,
                         "txid1": txid_1,
